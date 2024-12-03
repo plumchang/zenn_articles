@@ -2,8 +2,12 @@
 title: "Web Audio API + React でシンセサイザーを作ってみよう"
 emoji: "🎹"
 type: "tech"
-topics: ["React", "WebAudioAPI", "AudioContext"]
-published: false
+topics:
+  - "react"
+  - "webaudioapi"
+  - "audiocontext"
+published: true
+published_at: "2024-12-03 16:39"
 publication_name: "milabo"
 ---
 
