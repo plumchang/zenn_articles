@@ -142,6 +142,8 @@ oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
 
 #### ここまでのサンプル
 
+デフォルトでコードが表示されている場合は、右端のバーをクリックすると、デモ表示できます。
+
 @[codesandbox](https://codesandbox.io/embed/y2n84w?view=editor+%2B+preview&module=%2Fsrc%2FReactSimpleSynthesizer1.tsx)
 
 
