@@ -16,7 +16,7 @@ publication_name: "milabo"
 本記事では、Web Audio API と React を使った簡単なシンセサイザーアプリを作成し、その仕組みを学んでいきたいと思います。
 
 :::message
-誤解がないように細くしておくと、シンセサイザーアプリと弊社業務に直接関係はございません。あくまで、筆者の興味とWeb Audio API の学習のためのサンプルアプリとして作成した形となります🙇‍♂️
+誤解がないように補足しておくと、シンセサイザーアプリと弊社業務に直接関係はございません。あくまで、筆者の興味とWeb Audio API の学習のためのサンプルアプリとして作成した形となります🙇‍♂️
 :::
 
 ## Web Audio API
@@ -132,9 +132,9 @@ oscillator.stop();
 oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
 ```
 
-- `oscillator.frequency.setValueAtTime`を使って、音量を設定します。
+- `oscillator.frequency.setValueAtTime`を使って、周波数を設定します。
   - 第一引数は周波数です。
-  - 第二引数は時間で、`audioContext.currentTime`を指定すると、即座に音量が変更されます。
+  - 第二引数は時間で、`audioContext.currentTime`を指定すると、即座に周波数が変更されます。
 
 #### ここまでのサンプル
 
