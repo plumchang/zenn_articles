@@ -9,6 +9,7 @@ topics:
   - "webassembly"
   - "performance"
 published: false
+publication_name: "milabo"
 ---
 
 # はじめに
