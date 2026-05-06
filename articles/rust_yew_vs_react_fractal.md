@@ -213,7 +213,7 @@ fn main() {
 }
 ```
 
-JS の `self.onmessage = (e) => {...}` 1 行に相当する処理が、Rust ではこのくらいの記述量になります。`Closure::wrap` と `forget()` の組み合わせは、[wasm-bindgen のクロージャ仕様](https://rustwasm.github.io/wasm-bindgen/examples/closures.html)で説明されている定石パターンです。
+JS の `self.onmessage = (e) => {...}` 1 行に相当する処理が、Rust ではこのくらいの記述量になります。`Closure::wrap` と `forget()` の組み合わせは、[wasm-bindgen のクロージャ仕様](https://wasm-bindgen.github.io/wasm-bindgen/examples/closures.html)で説明されている定石パターンです。
 
 # 落とし穴①：Yew で「並列化したつもり」になっていた話
 
@@ -292,7 +292,7 @@ codegen-units = 1
 
 `trunk serve --release` で起動し直すと、wasm のサイズも **174KB → 30KB（約 1/6）** に縮み、性能も大きく改善しました。
 
-**教訓**: WASM のベンチマークを取るときは、必ず `--release` ビルドで。dev ビルドの数値を持って「WASM 遅い」と判断してはいけない。これは [wasm-bindgen のドキュメント](https://rustwasm.github.io/wasm-bindgen/) などでも繰り返し書かれていますが、実際にやらかすまで重大さに気づきにくい落とし穴です。
+**教訓**: WASM のベンチマークを取るときは、必ず `--release` ビルドで。dev ビルドの数値を持って「WASM 遅い」と判断してはいけない。これは [wasm-bindgen のドキュメント](https://wasm-bindgen.github.io/wasm-bindgen/) などでも繰り返し書かれていますが、実際にやらかすまで重大さに気づきにくい落とし穴です。
 
 # 落とし穴③（おまけ）：dev で動く ≠ prod で動く
 
@@ -464,6 +464,23 @@ while (i < maxIterations) {
 
 V8 はこのような関数を **TurboFan** で最適化し、結果としてネイティブに近い機械語を吐きます。WebAssembly も最終的には機械語になるので、両者の差はそれほど大きくならないわけです。
 
+### 補足：JIT 最適化と「deopt（最適化解除）」
+
+V8 の JIT 最適化はあくまで「**実行時に観測した型の前提**」に依存しています。例えば「`z_re` は常に `number` 型」という前提で機械語を吐く。
+
+ところが、もしループの途中で型の前提が崩れると（例：途中で `z_re` に文字列を代入する、配列に違う型の値が混ざる、など）、V8 は「観測した前提が崩れた」と判断して、**最適化済みコードを破棄してインタプリタに戻ります**。これが **deopt（deoptimization、最適化解除）** と呼ばれる現象で、起きるとそのコードのパフォーマンスが大きく落ちます。
+
+今回のマンデルブロループは：
+
+- ループ内の変数が常に `number`（型変化なし）
+- 関数呼び出しなし
+- 例外もなし
+- 動的なオブジェクト操作なし
+
+という「**deopt のリスクが極めて低い理想形**」になっており、最適化が外れることなく走り切れます。逆に言えば、ここから少しでもパターンを外すと、JS の性能は不安定になりやすい——これが後述の「Rust の魅力」の章で触れる **「パフォーマンスの予測可能性」** の文脈に繋がります。
+
+この deopt の仕組みについては [V8 公式ブログの Sparkplug 解説記事](https://v8.dev/blog/sparkplug) や、[V8 公式ブログ](https://v8.dev/blog) の各種 TurboFan 関連記事が詳しいです。
+
 ## 2. Worker 境界のオーバーヘッド
 
 ボトルネックは「計算」だけではありません。
@@ -521,9 +538,9 @@ JS（や TS の `any`）でありがちな「実行時まで気づかない型�
 
 ## 2. パフォーマンスの予測可能性
 
-V8 JIT は最適化されている間は速いものの、いわゆる「**deopt（最適化が外れる）**」の条件が複雑だ、という話を「なぜ差が小さいのか」の章でも触れました。
+V8 JIT は最適化されている間は速いものの、いわゆる「**deopt（最適化が外れる）**」の条件が複雑だ、という話を「なぜ差が小さいのか」の章で触れました。
 
-一方 WASM は JIT に依存せず最初から機械語なので、「**最悪ケースが安定して速い**」と言われています。私自身まだここを定量的に検証できているわけではないので、詳しくは [WebAssembly 公式の High-level Goals](https://webassembly.org/docs/high-level-goals/) や [V8 の deoptimization 解説記事](https://v8.dev/blog/turbofan-jit) などを参照してください。
+一方 WASM は JIT に依存せず最初から機械語なので、「**最悪ケースが安定して速い**」と言われています。私自身まだここを定量的に検証できているわけではないので、詳しくは [WebAssembly 公式の High-level Goals](https://webassembly.org/docs/high-level-goals/) や [V8 公式ブログ - Sparkplug](https://v8.dev/blog/sparkplug) などを参照してください。
 
 ## 3. GC stop-the-world がない
 
@@ -570,13 +587,14 @@ JS の GC は近年かなり優秀ですが、それでも 60fps を狙うアニ
 
 - [The Rust Programming Language（日本語訳）](https://doc.rust-jp.rs/book-ja/title-page.html) — Rust 公式入門書
 - [Rust and WebAssembly](https://rustwasm.github.io/docs/book/) — Rust + WASM の公式ガイド
-- [wasm-bindgen Book](https://rustwasm.github.io/wasm-bindgen/) — JS と Rust を繋ぐ仕組み
-- [web-sys / js-sys](https://rustwasm.github.io/wasm-bindgen/reference/js-sys.html) — ブラウザ API への Rust バインディング
+- [wasm-bindgen Book](https://wasm-bindgen.github.io/wasm-bindgen/) — JS と Rust を繋ぐ仕組み
+- [js-sys API ドキュメント](https://wasm-bindgen.github.io/wasm-bindgen/api/js_sys/index.html) — JS 標準オブジェクトの Rust バインディング
+- [web-sys ガイド](https://wasm-bindgen.github.io/wasm-bindgen/web-sys/index.html) — ブラウザ Web API の Rust バインディング
 
 ## Yew / Trunk
 
-- [Yew 公式ドキュメント](https://yew.rs/docs/)
-- [Trunk 公式](https://trunkrs.dev/) / [Web Worker サポート](https://github.com/trunk-rs/trunk/tree/main/examples/webworker)
+- [Yew 公式](https://yew.rs/) / [Yew チュートリアル](https://yew.rs/docs/getting-started/introduction)
+- [Trunk 公式リポジトリ](https://github.com/trunk-rs/trunk) / [Trunk Web Worker サンプル](https://github.com/trunk-rs/trunk/tree/main/examples/webworker)
 
 ## Vite / Web Worker
 
