@@ -30,8 +30,12 @@ publication_name: "milabo"
 
 実装したサンプルアプリは以下で公開しています。
 
-- React 版: https://plumchang.github.io/react-fractal/ （ソース: https://github.com/plumchang/react-fractal ）
-- Yew 版: https://plumchang.github.io/yew-fractal/ （ソース: https://github.com/plumchang/yew-fractal ）
+- React 版
+  - デモ: https://plumchang.github.io/react-fractal/
+  - ソースコード: https://github.com/plumchang/react-fractal
+- Yew 版
+  - デモ: https://plumchang.github.io/yew-fractal/
+  - ソースコード: https://github.com/plumchang/yew-fractal
 
 ## 対象読者
 
@@ -259,12 +263,12 @@ for i in 0..4 {
 
 （ちなみに本記事も AI の助力を大いに借りて執筆していますが、こうやって自分の手で確かめながら進めると、確実に学びが残ります。）
 
-# 落とし穴②：dev ビルドの WASM は JS より遅いこともある
+# 落とし穴②：未最適化ビルド（debug ビルド）の WASM は JS より遅いこともある
 
 並列化を直して計測してみると、今度は別の問題が出ました。
 
 ```
-[計測結果（Yew 版・dev ビルド）]
+[計測結果（Yew 版・debug ビルド）]
 深ズームシーン: Frame 500ms 超
 [計測結果（React 版）]
 深ズームシーン: Frame 170ms 程度
@@ -272,7 +276,7 @@ for i in 0..4 {
 
 **Yew 版の方が圧倒的に遅い。**
 
-原因は `trunk serve` のデフォルトが **debug ビルド** だったことです。Rust の debug ビルドは：
+原因は `trunk serve` のデフォルトが **debug ビルド**（=未最適化の開発用ビルド。`cargo build` の `--release` を付けない場合と同じ。Vite などフロント文脈での "dev ビルド" に近い位置付け）だったことです。Rust の debug ビルドは：
 
 - 配列アクセスの境界チェックが有効
 - インライン化が無効
@@ -292,7 +296,7 @@ codegen-units = 1
 
 `trunk serve --release` で起動し直すと、wasm のサイズも **174KB → 30KB（約 1/6）** に縮み、性能も大きく改善しました。
 
-**教訓**: WASM のベンチマークを取るときは、必ず `--release` ビルドで。dev ビルドの数値を持って「WASM 遅い」と判断してはいけない。これは [wasm-bindgen のドキュメント](https://wasm-bindgen.github.io/wasm-bindgen/) などでも繰り返し書かれていますが、実際にやらかすまで重大さに気づきにくい落とし穴です。
+**教訓**: WASM のベンチマークを取るときは、必ず `--release` ビルドで。未最適化の debug ビルドの数値を持って「WASM 遅い」と判断してはいけない。これは [wasm-bindgen のドキュメント](https://wasm-bindgen.github.io/wasm-bindgen/) などでも繰り返し書かれていますが、実際にやらかすまで重大さに気づきにくい落とし穴です。
 
 # 落とし穴③（おまけ）：dev で動く ≠ prod で動く
 
