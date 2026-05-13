@@ -8,7 +8,7 @@ topics:
   - "react"
   - "webassembly"
   - "performance"
-published: false
+published: true
 publication_name: "milabo"
 ---
 
