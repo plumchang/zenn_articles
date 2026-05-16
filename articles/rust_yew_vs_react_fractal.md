@@ -370,6 +370,17 @@ const worker = new Worker(
 
 # 実測結果
 
+## 検証環境
+
+本記事の計測はすべて以下の環境で実施しています。
+
+- マシン: MacBook Pro（Apple M3 Pro / メモリ 36GB）
+- OS: macOS
+- ブラウザ: Google Chrome（V8 エンジン）
+- ビルド: 両アプリとも本番ビルド（React 版は `npm run build`、Yew 版は `trunk build --release`）の成果物を GitHub Pages 上で計測
+
+## 結果
+
 両者を同条件（Worker × 4 プール再利用、release ビルド、同じ画面サイズ）で揃えた上で、改めて計測した結果がこちらです。
 
 | シーン | React 版 Frame | Yew 版 Frame | 比 |
